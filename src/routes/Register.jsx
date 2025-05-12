@@ -1,12 +1,12 @@
 import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserProvider";
+import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Register = () => {
   const [email, setEmail] = useState("martinadanvargaslopez@gmail.com");
   const [password, setPassword] = useState("123123");
 
-  const { loginUser } = useContext(UserContext);
+  const { registerUser } = useContext(UserContext);
 
   const navegate = useNavigate();
 
@@ -14,20 +14,26 @@ const Login = () => {
     e.preventDefault();
     console.log("procesando form..." + email + password);
     try {
-      await loginUser(email, password);
-      console.log("Usuario logueado");
+      await registerUser(email, password);
+      console.log("Usuario registrado");
       navegate("/");
     } catch (error) {
       console.log(error.code);
-      if (error.code === "auth/invalid-credential") {
-        console.log("Credenciales inválidas");
+      if (error.code === "auth/email-already-in-use") {
+        console.log("El email ya esta en uso");
+      } else if (error.code === "auth/weak-password") {
+        console.log("La contraseña debe tener al menos 6 caracteres");
+      } else if (error.code === "auth/invalid-email") {
+        console.log("El email no es valido");
+      } else {
+        console.log("Ocurrio un error");
       }
     }
   };
 
   return (
     <>
-      <h1>Login</h1>
+      <h1>Register</h1>
       <form onSubmit={handleSubmit}>
         <input
           type="email"
@@ -41,10 +47,10 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit">Acceder</button>
+        <button type="submit">Registrarse</button>
       </form>
     </>
   );
 };
 
-export default Login;
+export default Register;
