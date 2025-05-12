@@ -1,32 +1,47 @@
 import { useContext, useState } from "react";
-import { UserContext } from "../context/UserProvider";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserProvider";
 
 const Register = () => {
-  const [email, setEmail] = useState("martinadanvargaslopez@gmail.com");
-  const [password, setPassword] = useState("123123");
-
+  const navegate = useNavigate();
   const { registerUser } = useContext(UserContext);
 
-  const navegate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+    setError,
+  } = useForm({
+    defaultValues: {
+      email: "bluuweb1@test.com",
+      password: "123123",
+      repassword: "123123",
+    },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("procesando form..." + email + password);
+  const onSubmit = async ({ email, password }) => {
+    console.log(email, password);
     try {
       await registerUser(email, password);
-      console.log("Usuario registrado");
+      console.log("Usuario creado");
       navegate("/");
     } catch (error) {
       console.log(error.code);
-      if (error.code === "auth/email-already-in-use") {
-        console.log("El email ya esta en uso");
-      } else if (error.code === "auth/weak-password") {
-        console.log("La contraseña debe tener al menos 6 caracteres");
-      } else if (error.code === "auth/invalid-email") {
-        console.log("El email no es valido");
-      } else {
-        console.log("Ocurrio un error");
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          setError("email", {
+            message: "Usuario ya registrado",
+          });
+          break;
+        case "auth/invalid-email":
+          setError("email", {
+            message: "Formato email no válido",
+          });
+          break;
+        default:
+          console.log("Ocurrio un error en el server");
       }
     }
   };
@@ -34,20 +49,56 @@ const Register = () => {
   return (
     <>
       <h1>Register</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <input
           type="email"
           placeholder="Ingrese email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          {...register("email", {
+            required: {
+              value: true,
+              message: "Campo obligatorio",
+            },
+            pattern: {
+              value:
+                /[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})/,
+              message: "Formato de email incorrecto",
+            },
+          })}
         />
+        {errors.email && <p>{errors.email.message}</p>}
         <input
           type="password"
-          placeholder="Ingrese password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Ingrese Password"
+          {...register("password", {
+            setValueAs: (v) => v.trim(),
+            minLength: {
+              value: 6,
+              message: "Mínimo 6 carácteres",
+            },
+            validate: {
+              trim: (v) => {
+                if (!v.trim()) {
+                  return "No seas 🤡, escribe algo";
+                }
+                return true;
+              },
+            },
+          })}
         />
-        <button type="submit">Registrarse</button>
+        {errors.password && <p>{errors.password.message}</p>}
+        <input
+          type="password"
+          placeholder="Ingrese Password"
+          {...register("repassword", {
+            setValueAs: (v) => v.trim(),
+            validate: {
+              equals: (v) => v === getValues("password"),
+              message: "No coinciden las contraseñas",
+            },
+          })}
+        />
+        {errors.repassword && <p>{errors.repassword.message}</p>}
+        <button type="submit">Register</button>
       </form>
     </>
   );
