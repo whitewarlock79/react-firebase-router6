@@ -6,6 +6,8 @@ import { erroresFirebase } from "../utils/erroresFirebase";
 import FormInput from "../components/FormInput";
 import FormError from "../components/FormError";
 import { formValidate } from "../utils/formValidate";
+import Title from "../components/Title";
+import FormSubmit from "../components/FormSubmit";
 
 const Login = () => {
   const { loginUser } = useContext(UserContext);
@@ -32,16 +34,15 @@ const Login = () => {
       await loginUser(email, password);
       navegate("/");
     } catch (error) {
-      setError("firebase", {
-        message: erroresFirebase(error.code),
-      });
+      console.log(error.code);
+      const { code, message } = erroresFirebase(error.code);
+      setError(code, { message });
     }
   };
 
   return (
     <>
-      <h1>Login</h1>
-      <FormError error={errors.firebase} />
+      <Title title="Login" />
       <form onSubmit={handleSubmit(onSubmit)}>
         <FormInput
           type="email"
@@ -51,8 +52,12 @@ const Login = () => {
             pattern: patternEmail,
             onChange: () => clearErrors("firebase"),
           })}
-        />
-        <FormError error={errors.email} />
+          label="Ingresa tu correo"
+          error={errors.email}
+        >
+          <FormError error={errors.email} />
+        </FormInput>
+
         <FormInput
           type="password"
           placeholder="Ingrese Password"
@@ -61,9 +66,12 @@ const Login = () => {
             validate: validateTrim,
             onChange: () => clearErrors("firebase"),
           })}
-        />
-        <FormError error={errors.password} />
-        <button type="submit">Acceder</button>
+          label="Ingresa tu contraseña"
+          error={errors.password}
+        >
+          <FormError error={errors.password} />
+        </FormInput>
+        <FormSubmit text="Acceder" />
       </form>
     </>
   );
